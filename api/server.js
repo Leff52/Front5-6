@@ -124,9 +124,7 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsDoc(swaggerOptions)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs))
 
-app.get('/', (req, res) => {
-	res.send('Hello! Это API сервер. Перейдите на /products или /api-docs')
-})
+
 
 // Запуск сервера
 app.listen(PORT, () => {

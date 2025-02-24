@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Overpass:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <title>Товары</title>
+</head>
+<body>
+    <h1>Товары</h1>
+        <div>
+            <input type="text" id="filter-category" placeholder="Введите категорию">
+            <input type="number" id="filter-id" placeholder="Введите ID">
+            <button onclick="loadProducts()">Фильтровать</button>
+        </div>
+  <div id="products-container"></div>
+  <script>
+    async function loadProducts() {
+      const category = document.getElementById('filter-category').value;
+      const id = document.getElementById('filter-id').value;
+      let url = 'http://localhost:3000/products';
+      const params = [];
+      if (category) params.push(`category=${encodeURIComponent(category)}`);
+      if (id) params.push(`id=${id}`);
+      if (params.length > 0) url += '?' + params.join('&');
+      const response = await fetch(url);
+      const products = await response.json();
+      const container = document.getElementById('products-container');
+      container.innerHTML = '';
+      products.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `<h2>${p.name}</h2>
+                          <p>Цена: ${p.price}</p>
+                          <p>${p.description}</p>
+                          <p>Категории: ${p.categories.join(', ')}</p>`;
+        container.appendChild(card);
+      });
+    }
+    
+    // Автоматическая загрузка товаров при открытии страницы
+    window.onload = loadProducts;
+  </script>
+</body>
+</html>

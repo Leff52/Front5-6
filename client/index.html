@@ -18,26 +18,27 @@
         </div>
   <div id="products-container"></div>
   <script>
+    
     async function loadProducts() {
-      const category = document.getElementById('filter-category').value;
-      const id = document.getElementById('filter-id').value;
-      let url = 'http://localhost:3000/products';
-      const params = [];
-      if (category) params.push(`category=${encodeURIComponent(category)}`);
-      if (id) params.push(`id=${id}`);
-      if (params.length > 0) url += '?' + params.join('&');
-      const response = await fetch(url);
-      const products = await response.json();
-      const container = document.getElementById('products-container');
-      container.innerHTML = '';
-      products.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `<h2>${p.name}</h2>
-                          <p>Цена: ${p.price}</p>
-                          <p>${p.description}</p>
-                          <p>Категории: ${p.categories.join(', ')}</p>`;
-        container.appendChild(card);
+    const category = document.getElementById('filter-category').value; 
+    const id = document.getElementById('filter-id').value;
+    let url = 'http://localhost:3001/products'; // обращаемся к серверу для получения инфы
+    const params = [];
+    if (category) params.push(`category=${encodeURIComponent(category)}`);
+    if (id) params.push(`id=${id}`);
+    if (params.length > 0) url += '?' + params.join('&');
+    const response = await fetch(url);
+    const products = await response.json();
+    const container = document.getElementById('products-container');
+    container.innerHTML = '';
+    products.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.innerHTML = `<h2>${p.name}</h2>
+                <p>Цена: ${p.price}</p>
+                <p>${p.description}</p>
+                <p>Категории: ${p.categories.join(', ')}</p>`;
+    container.appendChild(card);
       });
     }
     

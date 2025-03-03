@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Админская страница</title>
+  <style>
+    #chat-box {
+      border: 1px solid #887979;
+      background-color: #f0f0f0;
+      height: 300px;
+      overflow-y: auto;
+      padding: 10px;
+      margin-bottom: 10px;
+      width: 400px;
+    }
+  </style>
+</head>
+<body style="background-color: #887979;">
+  <h1>Админская панель</h1>
+  <div id="chat-box"></div>
+  <input type="text" id="chat-input" placeholder="Введите сообщение">
+  <button onclick="sendMessage()">Отправить</button>
+
+  <script>
+  const ws = new WebSocket(`ws://${location.hostname}:4000`);
+
+    ws.onopen = () => {
+      console.log('Админ: соединение установлено');
+      // Идентифицируем администратора
+      ws.send(JSON.stringify({ type: 'identify', role: 'admin' }));
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Админ получил:', data);
+      const chatBox = document.getElementById('chat-box');
+      const messageElem = document.createElement('p');
+      if(data.from === 'client') {
+        messageElem.textContent = `Клиент написал: ${data.message}`;
+      } else {
+        messageElem.textContent = data.message;
+      }
+      chatBox.appendChild(messageElem);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    };
+
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      const targetId = 'client1';
+      if(message) {
+        ws.send(JSON.stringify({ targetId, message }));
+        input.value = '';
+      }
+    }
+  </script>
+</body>
+</html>

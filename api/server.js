@@ -1,132 +1,168 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const swaggerJsDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+const path = require('path')
+const WebSocket = require('ws')
+const http = require('http')
+const { ApolloServer, gql } = require('apollo-server-express')
+
 const app = express();
-const PORT = process.env.PORT || 3001
+
+const PORT = process.env.PORT || 4000
 const cors = require('cors')
 
 
 app.use(cors())
-
+app.use(express.static(path.join(__dirname, 'public'))) // Добавляем статические файлы
 
 app.use(bodyParser.json())
 
 let products = [
 	{
 		id: 1,
-		name: 'Товар 1',
-		price: 25000,
-		description: 'Описание товара 1',
-		categories: ['Телфоны', 'Смартфоны'],
+		name: 'Часы',
+		price: 10000,
+		description:
+			'Далеко-далеко за словесными горами, в стране гласных и согласных живут рыбные тексты. Предупредила предложения все заголовок лучше парадигматическая жизни страну языком залетают.',
+		categories: ['Электроника'],
 	},
 	{
 		id: 2,
-		name: 'Товар 2',
-		price: 2250,
-		description: 'Описание товара 2',
+		name: 'Носки',
+		price: 200,
+		description:
+			'Далеко-далеко за словесными горами, в стране гласных и согласных живут рыбные тексты. Предупредила предложения все заголовок лучше парадигматическая жизни страну языком залетают.',
 		categories: ['Одежда'],
 	},
 	{
 		id: 3,
-		name: 'Товар 3',
-		price: 3000,
-		description: 'Описание товара 3',
-		categories: ['Стройматериалы'],
+		name: 'Xiomi Redmi 9 Pro Max 128GB 6GB RAM Dual SIM Onyx Black (Global Version) (Xiaomi)',
+		price: 30000,
+		description:
+			'Далеко-далеко за словесными горами, в стране гласных и согласных живут рыбные тексты. Предупредила предложения все заголовок лучше парадигматическая жизни страну языком залетают.',
+		categories: ['Электроника'],
 	},
 	{
 		id: 4,
-		name: 'Товар 4',
-		price: 2500000,
-		description: 'Описание товара 4',
+		name: 'Квартира в центре Москвы 170м2 3 комнаты 15 этаж с видом на Кремль и Москва-реку',
+		price: 400000000,
+		description:
+			'Далеко-далеко за словесными горами, в стране гласных и согласных живут рыбные тексты. Предупредила предложения все заголовок лучше парадигматическая жизни страну языком залетают.',
 		categories: ['Недвижка'],
 	},
 	{
 		id: 5,
-		name: 'Товар 5',
-		price: 5000,
-		description: 'Описание товара 5',
-		categories: ['Видеокарты'],
+		name: 'Gucci куртка из кожи с мехом б/у',
+		price: 50000,
+		description:
+			'Далеко-далеко за словесными горами, в стране гласных и согласных живут рыбные тексты. Предупредила предложения все заголовок лучше парадигматическая жизни страну языком залетают.',
+		categories: ['Одежда'],
 	},
 ]
-// Поиск товаров (по параметрам)
-app.get('/products', (req, res) => {
-	const { category, id } = req.query
-	let filtered = products
-	if (id) {
-		filtered = filtered.filter(p => p.id === parseInt(id))
-	}
-	if (category) {
-		filtered = filtered.filter(p => p.categories.includes(category))
-	}
-	res.json(filtered)
-})
-// Добавление нового товара
-app.post('/products', (req, res) => {
-	const { name, price, description, categories } = req.body
-	const newProduct = {
-		id: products.length + 1,
-		name,
-		price,
-		description,
-		categories,
-	}
-	products.push(newProduct)
-	res.status(201).json(newProduct)
-})
-// Получение информации о товаре (по id)
-app.get('/products/:id', (req, res) => {
-	const product = products.find(p => p.id === parseInt(req.params.id))
-	if (product) {
-		res.json(product)
-	} else {
-		res.status(404).json({ message: 'Товар не найден' })
-	}
-})
-// Обновление товара (по id)
-app.put('/products/:id', (req, res) => {
-	const product = products.find(p => p.id === parseInt(req.params.id))
-	if (product) {
-		const { name, price, description, categories } = req.body
-		product.name = name || product.name
-		product.price = price || product.price
-		product.description = description || product.description
-		product.categories = categories || product.categories
-		res.json(product)
-	} else {
-		res.status(404).json({ message: 'Товар не найден' })
-	}
-})
 
-// Удаление товара (по id)
-app.delete('/products/:id', (req, res) => {
-  products = products.filter(p => p.id !== parseInt(req.params.id));
-  res.status(204).send();
-});
-// Инициализация Swagger
-const swaggerOptions = {
-	swaggerDefinition: {
-		openapi: '3.0.0',
-		info: {
-			title: 'Admin Panel API',
-			version: '1.0.0',
-			description: 'API для управления товарами интернет-магазина',
-		},
-		servers: [
-			{
-				url: 'http://localhost:3001',
-			},
-		],
+const typeDefs = gql`
+	type Product {
+		id: ID!
+		name: String!
+		price: Float!
+		description: String
+		categories: [String]
+	}
+
+	type Query {
+		products: [Product]
+		product(id: ID!): Product
+	}
+`
+
+const resolvers = {
+	Query: {
+		products: () => products,
+		product: (_, { id }) => products.find(p => p.id === parseInt(id)),
 	},
-	apis: ['./server.js'], // Путь к файлам с описанием роутов
 }
-// Инициализация SwaggerUI
-const swaggerDocs = swaggerJsDoc(swaggerOptions)
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs))
+async function startApolloServer() {
+  const apolloServer = new ApolloServer({ typeDefs, resolvers });
+  await apolloServer.start();
+  apolloServer.applyMiddleware({ app, path: '/graphql' });
+}
+startApolloServer();
 
+const server = http.createServer(app)
 
+//WebSocket
 
-// Запуск сервера
-app.listen(PORT, () => {
+const wss = new WebSocket.Server({ server })
+
+// Для хранения подключений
+let adminSocket = null // Подключение администратора (один админ)
+const clients = new Map() // Клиенты (ключ – clientId, значение – ws)
+
+wss.on('connection', ws => {
+	console.log('Новое WebSocket-соединение установлено')
+
+	ws.on('message', message => {
+		console.log('Сервер получил сообщение:', message)
+		try {
+			const data = JSON.parse(message)
+			if (data.type === 'identify') {
+				if (data.role === 'admin') {
+					adminSocket = ws
+					ws.role = 'admin'
+					console.log('Подключился админ')
+				} else if (data.role === 'client') {
+					ws.role = 'client'
+					ws.id = data.id || Date.now().toString()
+					clients.set(ws.id, ws)
+					console.log(`Подключился клиент с id: ${ws.id}`)
+				}
+				return 
+			}
+			if (ws.role === 'client') {
+				console.log(`Клиент отправил сообщение: ${data.message}`);
+				if (adminSocket && adminSocket.readyState === WebSocket.OPEN) {
+					const payload = {
+					from: 'client',
+					clientId: ws.id,
+					message: data.message
+					};
+					adminSocket.send(JSON.stringify(payload));
+					console.log('Переслано администратору:', payload);
+				}
+				}
+			if (ws.role === 'admin') {
+				if (data.targetId && data.message) {
+					const targetSocket = clients.get(data.targetId)
+					if (targetSocket && targetSocket.readyState === WebSocket.OPEN) {
+						const payload = {
+							from: 'admin',
+							message: data.message,
+						}
+						targetSocket.send(JSON.stringify(payload))
+						console.log(
+							`Админ отправил сообщение клиенту ${data.targetId}:`,
+							payload
+						)
+					} else {
+						console.log(`Клиент с id ${data.targetId} не найден или недоступен`)
+					}
+				}
+			}
+		} catch (e) {
+			console.error('Ошибка обработки сообщения:', e)
+		}
+	})
+
+	ws.on('close', () => {
+		if (ws.role === 'admin') {
+			adminSocket = null
+			console.log('Админ отключился')
+		} else if (ws.role === 'client') {
+			clients.delete(ws.id)
+			console.log(`Клиент с id ${ws.id} отключился`)
+		}
+	})
+})
+server.listen(PORT, () => {
 	console.log(`Сервер запущен на http://localhost:${PORT}`)
+	console.log(`GraphQL доступен по http://localhost:${PORT}/graphql`)
 })

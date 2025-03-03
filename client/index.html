@@ -9,41 +9,89 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Overpass:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <title>Товары</title>
 </head>
-<body>
-    <h1>Товары</h1>
-        <div>
-            <input type="text" id="filter-category" placeholder="Введите категорию">
-            <input type="number" id="filter-id" placeholder="Введите ID">
-            <button onclick="loadProducts()">Фильтровать</button>
-        </div>
+<body style="background-color: rgb(138, 128, 128)" >
+    <h1>Выберите, какие данные отображать</h1>
+        <label><input type="checkbox" value="name" checked> Название</label>
+        <label><input type="checkbox" value="price" checked> Цена</label>
+        <label><input type="checkbox" value="description"> Описание</label>
+        <label><input type="checkbox" value="categories"> Категории</label>
+        <button onclick="loadProducts()">Получить товары</button>
   <div id="products-container"></div>
+
+  <div id="chat-container" style="border: 1px solid #ffffff; padding: 20px; margin: 20px; width: 600px; background-color:rgb(205, 194, 179)">
+    <h2>Чат support</h2>
+    <div id="chat-messages" style="height: 200px; overflow-y: scroll; border: 1px solid #363636; padding: 5px;"></div>
+    <input type="text" id="chat-input" placeholder="Введите сообщение" style="width: 80%;">
+    <button onclick="sendMessage()">Отправить</button>
+  </div>
+
   <script>
-    
-    async function loadProducts() {
-    const category = document.getElementById('filter-category').value; 
-    const id = document.getElementById('filter-id').value;
-    let url = 'http://localhost:3001/products'; // обращаемся к серверу для получения инфы
-    const params = [];
-    if (category) params.push(`category=${encodeURIComponent(category)}`);
-    if (id) params.push(`id=${id}`);
-    if (params.length > 0) url += '?' + params.join('&');
-    const response = await fetch(url);
-    const products = await response.json();
-    const container = document.getElementById('products-container');
-    container.innerHTML = '';
-    products.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'product-card';
-    card.innerHTML = `<h2>${p.name}</h2>
-                <p>Цена: ${p.price}</p>
-                <p>${p.description}</p>
-                <p>Категории: ${p.categories.join(', ')}</p>`;
-    container.appendChild(card);
-      });
+function buildQuery(selectedFields) {
+      const fields = selectedFields.join('\n');
+      return `query {
+        products {
+          ${fields}
+        }
+      }`;
     }
     
-    // Автоматическая загрузка товаров при открытии страницы
-    window.onload = loadProducts;
+    async function loadProducts() {
+      // Собираем выбранные поля из чекбоксов
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+      const selectedFields = Array.from(checkboxes).map(ch => ch.value);
+      
+      const query = buildQuery(selectedFields);
+      const response = await fetch('http://localhost:3000/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
+      });
+      
+      const responseBody = await response.json();
+      const products = responseBody.data.products;
+      
+      const container = document.getElementById('products-container');
+      container.innerHTML = '';
+      products.forEach(p => {
+        const card = document.createElement('div');
+        card.style.padding = '10px';
+        card.style.margin = '10px';
+        
+        selectedFields.forEach(field => {
+          const pElem = document.createElement('p');
+          // Если поле - массив, то объединяем его в строку через запятую
+          pElem.textContent = `${field}: ${Array.isArray(p[field]) ? p[field].join(', ') : p[field]}`; // 
+          card.appendChild(pElem); //
+        });
+        
+        container.appendChild(card);
+      });
+    }
+
+  const ws = new WebSocket('http://localhost:3000');
+  ws.onopen = () => {
+    console.log('Соединение с WebSocket сервером установлено');
+  };
+// Это событие срабатывает при получении сообщения от сервера
+  ws.onmessage = (event) => {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageElement = document.createElement('p');
+    messageElement.textContent = event.data;
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  };
+// Эта функция отправляет сообщение на сервер
+  function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value;
+    if (message) {
+      ws.send(message);
+      input.value = '';
+    }
+  }
+  
+  window.onload = loadProducts;
+
   </script>
 </body>
 </html>

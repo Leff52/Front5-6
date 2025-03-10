@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path')
+const swaggerJsDoc = require('swagger-jsdoc')
+const swaggerUi = require('swagger-ui-express')
 const WebSocket = require('ws')
 const http = require('http')
 const { ApolloServer, gql } = require('apollo-server-express')
@@ -162,6 +164,24 @@ wss.on('connection', ws => {
 		}
 	})
 })
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Admin Panel API',
+      version: '1.0.0',
+      description: 'API для управления товарами (REST)',
+    },
+    servers: [
+      {
+        url: 'http://localhost:4000', 
+	  },
+    ],
+  },
+  apis: [path.join(__dirname, 'admin-api.yaml')], 
+};
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 server.listen(PORT, () => {
 	console.log(`Сервер запущен на http://localhost:${PORT}`)
 	console.log(`GraphQL доступен по http://localhost:${PORT}/graphql`)

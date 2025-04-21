@@ -6,10 +6,11 @@ const swaggerUi = require('swagger-ui-express')
 const WebSocket = require('ws')
 const http = require('http')
 const { ApolloServer, gql } = require('apollo-server-express')
-
+const net = require('net')
 const app = express();
 
-const PORT = process.env.PORT || 4000
+const PORT = process.env.PORT || 3000
+const TCP_PORT = 5000
 const cors = require('cors')
 
 
@@ -174,7 +175,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:4000', 
+        url: 'http://localhost:3000', 
 	  },
     ],
   },
@@ -186,3 +187,33 @@ server.listen(PORT, () => {
 	console.log(`Сервер запущен на http://localhost:${PORT}`)
 	console.log(`GraphQL доступен по http://localhost:${PORT}/graphql`)
 })
+
+const tcpServer = net.createServer(socket => {
+	console.log('TCP клиент подключился')
+
+	socket.on('data', data => {
+		const message = data.toString().trim()
+		console.log('Получено TCP-сообщение:', message)
+
+		if (message.toLowerCase() === 'привет') {
+			socket.write('Ответ сервера: Тоже привет!\n')
+		} else {
+			socket.write(`Ответ сервера: получено "${message}"\n`)
+		}
+	})
+
+	socket.on('end', () => {
+		console.log('TCP соединение закрыто')
+	})
+
+	socket.on('error', err => {
+		console.error('TCP ошибка:', err.message)
+	})
+})
+
+tcpServer.listen(TCP_PORT, () => {
+	console.log(`TCP сервер запущен на порту ${TCP_PORT}`)
+})
+
+// Экспортировать сервер можно, если понадобится доступ из других файлов
+module.exports = tcpServer

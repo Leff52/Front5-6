@@ -1,5 +1,21 @@
+# Инструкция по запуску приложения
+
 Чтобы приложение работало нужно:
-1)cd api; node server.js
-2)Переходим в (http://localhost:4000/client.html) и (http://localhost:3000/admin.html)
-3)кайфуем и общаемся сами с собой)))
-4) добавил API спецификацию которая открывается в (http://localhost:4000/api-docs)
+
+1) Перейти в папку api и запустить приложение через Docker:
+```bash
+cd api
+docker compose up --build
+```
+
+2) Открыть в браузере:
+   - Клиентская страница: [http://localhost:3000/client.html](http://localhost:3000/client.html)
+   - Админская панель: [http://localhost:3000/admin.html](http://localhost:3000/admin.html)
+
+3) Кайфуем и общаемся сами с собой)))
+
+4) Документация API доступна по адресу [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+
+## Примечание
+
+Для использования Docker необходимо убедиться, что Docker Desktop установлен и запущен на вашем компьютере.

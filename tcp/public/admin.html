@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Админская панель</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #2b5876, #4e4376);
+      color: #fff;
+      min-height: 100vh;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      position: relative;
+      padding-bottom: 10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    h1::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: #00f7ff;
+      border-radius: 2px;
+      box-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff;
+    }
+    
+    .status {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      color: #a8d5ff;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      background-color: #4CAF50;
+      box-shadow: 0 0 8px #4CAF50;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    #chat-box {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      height: 400px;
+      overflow-y: auto;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    #chat-box p {
+      margin-bottom: 10px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      max-width: 80%;
+      word-wrap: break-word;
+      position: relative;
+      line-height: 1.4;
+    }
+    
+    .client-message {
+      background: rgba(255, 255, 255, 0.1);
+      margin-right: auto;
+      border-top-left-radius: 0;
+    }
+    
+    .admin-message {
+      background: rgba(0, 247, 255, 0.15);
+      margin-left: auto;
+      border-top-right-radius: 0;
+      text-align: right;
+    }
+    
+    .message-time {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-top: 5px;
+      display: block;
+    }
+    
+    .input-container {
+      display: flex;
+      position: relative;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    #chat-input {
+      flex: 1;
+      padding: 15px 20px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #fff;
+      font-size: 1rem;
+    }
+    
+    #chat-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    button {
+      background: linear-gradient(135deg, #00f7ff, #0088ff);
+      border: none;
+      color: white;
+      padding: 15px 25px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+    }
+    
+    button:hover {
+      background: linear-gradient(135deg, #0088ff, #00f7ff);
+      box-shadow: 0 0 15px rgba(0, 136, 255, 0.5);
+    }
+    
+    button i {
+      margin-left: 8px;
+    }
+    
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+    
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.5);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      animation: float 15s infinite linear;
+      opacity: 0.4;
+    }
+    
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0deg); }
+      100% { transform: translateY(-1000px) rotate(720deg); }
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .neon-btn {
+      padding: 8px 15px;
+      border: 1px solid #00f7ff;
+      background: transparent;
+      color: #00f7ff;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      box-shadow: 0 0 5px rgba(0, 247, 255, 0.5);
+    }
+    
+    .neon-btn:hover {
+      background: rgba(0, 247, 255, 0.2);
+      box-shadow: 0 0 15px rgba(0, 247, 255, 0.8);
+    }
+    #chat-box::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    #chat-box::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+    
+    #chat-box::-webkit-scrollbar-thumb {
+      background: rgba(0, 247, 255, 0.5);
+      border-radius: 10px;
+    }
+    
+    #chat-box::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 247, 255, 0.8);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Админская панель</h1>
+    <div class="status">
+      <span class="status-indicator"></span> 
+      <span id="connection-status">Подключено</span>
+    </div>
+    
+    <div id="chat-box"></div>
+    
+    <div class="input-container">
+      <input type="text" id="chat-input" placeholder="Введите сообщение...">
+      <button onclick="sendMessage()">Отправить <i class="fas fa-paper-plane"></i></button>
+    </div>
+    
+    <div class="controls">
+      <button class="neon-btn" onclick="clearChat()">Очистить чат</button>
+      <button class="neon-btn" onclick="toggleTheme()">Сменить тему</button>
+    </div>
+  </div>
+  
+  <div class="particles" id="particles"></div>
+
+  <script>
+    function createParticles() {
+      const particles = document.getElementById('particles');
+      const particleCount = 30;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+
+        const size = Math.random() * 5 + 2;
+        const animationDuration = Math.random() * 20 + 10;
+        const animationDelay = Math.random() * 10;
+        
+        particle.style.left = `${posX}%`;
+        particle.style.top = `${posY}%`;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.animationDuration = `${animationDuration}s`;
+        particle.style.animationDelay = `${animationDelay}s`;
+        
+        particles.appendChild(particle);
+      }
+    }
+    
+    // Очистить чат
+    function clearChat() {
+      document.getElementById('chat-box').innerHTML = '';
+    }
+    
+    // Переключить тему (светлую/темную)
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+    }
+    
+    // Подключаемся к WebSocket прокси (bridge)
+    const ws = new WebSocket(`ws://${location.hostname}:3001`);
+
+    ws.onopen = () => {
+      console.log('Админ: соединение установлено через прокси.');
+      ws.send(`IDENTIFY:admin`);
+      document.getElementById('connection-status').textContent = 'Подключено';
+    };
+    
+    ws.onclose = () => {
+      document.getElementById('connection-status').textContent = 'Отключено';
+      document.querySelector('.status-indicator').style.backgroundColor = '#ff3333';
+      document.querySelector('.status-indicator').style.boxShadow = '0 0 8px #ff3333';
+    };
+
+    ws.onmessage = (event) => {
+      console.log('Сообщение от сервера:', event.data);
+      const chatBox = document.getElementById('chat-box');
+      const p = document.createElement('p');
+      
+      // Определяем, от клиента или системное сообщение
+      if (event.data.includes('Клиент')) {
+        p.className = 'client-message';
+      } else {
+        p.className = 'system-message';
+      }
+      
+      p.innerHTML = `${event.data}<span class="message-time">${new Date().toLocaleTimeString()}</span>`;
+      chatBox.appendChild(p);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    };
+
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (text) {
+        const targetId = 'client1';
+        ws.send(`TO:${targetId}:${text}`);
+        
+        // Добавляем сообщение в чат от имени администратора
+        const chatBox = document.getElementById('chat-box');
+        const p = document.createElement('p');
+        p.className = 'admin-message';
+        p.innerHTML = `${text}<span class="message-time">${new Date().toLocaleTimeString()}</span>`;
+        chatBox.appendChild(p);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        
+        input.value = '';
+      }
+    }
+    document.getElementById('chat-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+    createParticles();
+  </script>
+</body>
+</html>
